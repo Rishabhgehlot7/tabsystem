@@ -1,86 +1,80 @@
-import React, { useRef, useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 const SwipeTabs = () => {
-  const cardRef = useRef(null);
+  const [activeTab, setActiveTab] = useState(0);
   const [startX, setStartX] = useState(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [currentTranslate, setCurrentTranslate] = useState(0);
-  const tabWidth = 100; // Adjust as needed
+  const tabsRef = useRef(null);
 
-  const handleMouseDown = (event) => {
-    setStartX(event.clientX);
-    setIsDragging(true);
-  };
+  useEffect(() => {
+    const handleTouchStart = (e) => {
+      setStartX(e.touches[0].clientX);
+    };
 
-  const handleMouseMove = (event) => {
-    if (!isDragging) return;
+    const handleTouchMove = (e) => {
+      if (startX === null) return;
 
-    const deltaX = event.clientX - startX;
-    setCurrentTranslate((prevTranslate) => prevTranslate + deltaX);
-  };
+      const currentX = e.touches[0].clientX;
+      const diff = startX - currentX;
 
-  const handleMouseUp = () => {
-    setIsDragging(false);
+      if (Math.abs(diff) > 50) {
+        if (diff > 0 && activeTab < 2) {
+          // Swipe left, show the next tab
+          setActiveTab(activeTab + 1);
+        } else if (diff < 0 && activeTab > 0) {
+          // Swipe right, show the previous tab
+          setActiveTab(activeTab - 1);
+        }
 
-    // Determine the direction of the swipe (left or right)
-    if (currentTranslate > tabWidth / 2) {
-      // Swipe right, show the previous tab
-      showPreviousTab();
-    } else if (currentTranslate < -tabWidth / 2) {
-      // Swipe left, show the next tab
-      showNextTab();
-    }
+        setStartX(null);
+      }
+    };
 
-    setCurrentTranslate(0);
-  };
+    tabsRef.current.addEventListener('touchstart', handleTouchStart);
+    tabsRef.current.addEventListener('touchmove', handleTouchMove);
 
-  const showPreviousTab = () => {
-    console.log('Show previous tab logic here');
-    // Add your logic to switch to the previous tab
-  };
-
-  const showNextTab = () => {
-    console.log('Show next tab logic here');
-    // Add your logic to switch to the next tab
-  };
+    return () => {
+      tabsRef.current.removeEventListener('touchstart', handleTouchStart);
+      tabsRef.current.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, [startX, activeTab]);
 
   return (
-    <div
-      ref={cardRef}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
-      style={{
-        width: '100%',
-        overflow: 'hidden',
-        whiteSpace: 'nowrap',
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          transition: 'transform 0.3s ease',
-          transform: `translateX(${currentTranslate}px)`,
-        }}
-      >
-        {/* Tab 1 */}
-        <div style={{ width: '100%', flex: '0 0 100%' }}>
-          <h2>Tab 1 Content</h2>
-          {/* Add your content for Tab 1 */}
-        </div>
+    <div ref={tabsRef}>
+      {/* Tab Headers */}
+      <div style={{ display: 'flex' }}>
+        {[0, 1, 2].map((index) => (
+          <div
+            key={index}
+            style={{
+              padding: '10px',
+              border: '1px solid #ccc',
+              cursor: 'pointer',
+              fontWeight: activeTab === index ? 'bold' : 'normal',
+            }}
+            onClick={() => setActiveTab(index)}
+          >
+            Tab {index + 1}
+          </div>
+        ))}
+      </div>
 
-        {/* Tab 2 */}
-        <div style={{ width: '100%', flex: '0 0 100%' }}>
-          <h2>Tab 2 Content</h2>
-          {/* Add your content for Tab 2 */}
-        </div>
-
-        {/* Tab 3 */}
-        <div style={{ width: '100%', flex: '0 0 100%' }}>
-          <h2>Tab 3 Content</h2>
-          {/* Add your content for Tab 3 */}
-        </div>
+      {/* Tab Content */}
+      <div style={{ height: '200px', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+        {[0, 1, 2].map((index) => (
+          <div
+            key={index}
+            style={{
+              width: '100%',
+              flex: '0 0 100%',
+              display: activeTab === index ? 'block' : 'none',
+              height: '100%',
+              backgroundColor: index === 0 ? 'lightblue' : index === 1 ? 'lightgreen' : 'lightcoral',
+            }}
+          >
+            <h2>Tab {index + 1} Content</h2>
+            {/* Add your content for each tab */}
+          </div>
+        ))}
       </div>
     </div>
   );
