@@ -3,53 +3,65 @@ import React, { useRef, useState } from 'react';
 const SwipeTabs = () => {
   const cardRef = useRef(null);
   const [startX, setStartX] = useState(null);
-  const [activeTab, setActiveTab] = useState(1); // Initial active tab
+  const [isDragging, setIsDragging] = useState(false);
+  const [currentTranslate, setCurrentTranslate] = useState(0);
+  const tabWidth = 100; // Adjust as needed
 
-  // Minimum distance required for a swipe gesture
-  const minSwipeDistance = 50;
-
-  const handleTouchStart = (event) => {
-    setStartX(event.touches[0].clientX);
+  const handleMouseDown = (event) => {
+    setStartX(event.clientX);
+    setIsDragging(true);
   };
 
-  const handleTouchEnd = (event) => {
-    const endX = event.changedTouches[0].clientX;
+  const handleMouseMove = (event) => {
+    if (!isDragging) return;
 
-    // Calculate the distance moved during the swipe
-    const distance = endX - startX;
+    const deltaX = event.clientX - startX;
+    setCurrentTranslate((prevTranslate) => prevTranslate + deltaX);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
 
     // Determine the direction of the swipe (left or right)
-    if (distance > minSwipeDistance) {
+    if (currentTranslate > tabWidth / 2) {
       // Swipe right, show the previous tab
       showPreviousTab();
-    } else if (distance < -minSwipeDistance) {
+    } else if (currentTranslate < -tabWidth / 2) {
       // Swipe left, show the next tab
       showNextTab();
     }
+
+    setCurrentTranslate(0);
   };
 
-  // Function to show the previous tab
   const showPreviousTab = () => {
-    setActiveTab((prevTab) => Math.max(prevTab - 1, 1));
+    console.log('Show previous tab logic here');
+    // Add your logic to switch to the previous tab
   };
 
-  // Function to show the next tab
   const showNextTab = () => {
-    setActiveTab((prevTab) => Math.min(prevTab + 1, 3));
+    console.log('Show next tab logic here');
+    // Add your logic to switch to the next tab
   };
 
   return (
     <div
       ref={cardRef}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      style={{ width: '100%', overflow: 'hidden', whiteSpace: 'nowrap' }}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+      style={{
+        width: '100%',
+        overflow: 'hidden',
+        whiteSpace: 'nowrap',
+      }}
     >
       <div
         style={{
           display: 'flex',
           transition: 'transform 0.3s ease',
-          transform: `translateX(-${(activeTab - 1) * 100}%)`,
+          transform: `translateX(${currentTranslate}px)`,
         }}
       >
         {/* Tab 1 */}
